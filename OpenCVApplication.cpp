@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "common.h"
+#include "LSB.h"
 #include <opencv2/core/utils/logger.hpp>
 
 wchar_t* projectPath;
@@ -437,58 +438,14 @@ int main()
 		system("cls");
 		destroyAllWindows();
 		printf("Menu:\n");
-		printf(" 1 - Open image\n");
-		printf(" 2 - Open BMP images from folder\n");
-		printf(" 3 - Image negative\n");
-		printf(" 4 - Image negative (fast)\n");
-		printf(" 5 - BGR->Gray\n");
-		printf(" 6 - BGR->Gray (fast, save result to disk) \n");
-		printf(" 7 - BGR->HSV\n");
-		printf(" 8 - Resize image\n");
-		printf(" 9 - Canny edge detection\n");
-		printf(" 10 - Edges in a video sequence\n");
-		printf(" 11 - Snap frame from live video\n");
-		printf(" 12 - Mouse callback demo\n");
+		printf("");
 		printf(" 0 - Exit\n\n");
 		printf("Option: ");
 		scanf("%d",&op);
 		switch (op)
 		{
 			case 1:
-				testOpenImage();
-				break;
-			case 2:
-				testOpenImagesFld();
-				break;
-			case 3:
-				testNegativeImage();
-				break;
-			case 4:
-				testNegativeImageFast();
-				break;
-			case 5:
-				testColor2Gray();
-				break;
-			case 6:
-				testImageOpenAndSave();
-				break;
-			case 7:
-				testBGR2HSV();
-				break;
-			case 8:
-				testResize();
-				break;
-			case 9:
-				testCanny();
-				break;
-			case 10:
-				testVideoSequence();
-				break;
-			case 11:
-				testSnap();
-				break;
-			case 12:
-				testMouseClick();
+				say_hello();
 				break;
 		}
 	}

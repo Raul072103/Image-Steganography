@@ -2,6 +2,10 @@
 2. LSB with Random Pixel Selection
 3. Discrete Cosine Transform (DCT) Steganography (JPEG)
 4. Frequency Domain Steganography (Wavelet Transform)
+5. My method:
+   
+   - somethign with frequency analysis
+   - choose more bits to hide the message based on the frequency of the respective color
 
 https://dl.acm.org/doi/10.1145/3694965
 
@@ -17,7 +21,7 @@ Three domains:
 3. Deep Learning Approaches (Convolutional Neural Networks (CNN) and Generative Adversial Network (GAN))
 	- use self-learned ways to embed a message
 
-1. Spatial Domain
+4. Spatial Domain
 
 1.1 LSB
 - simple LSB (the LSB pixel value is modified to embed the message)
