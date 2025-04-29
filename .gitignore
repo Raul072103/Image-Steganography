@@ -1,0 +1,110 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+*.log
+
+# Visual Studio temporary files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Backup & crash reports
+*.bak
+*.tmp
+*.tmp_proj
+*.svclog
+
+# Ngen files
+*.ni.dll
+*.ni.exe
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# Web projects
+Properties/PublishProfiles/
+
+# NuGet packages
+*.nupkg
+packages/
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# DotCover
+.idea/
+*.dotCover
+
+# Rider
+.idea/
+
+# Resharper
+_ReSharper*/
+*.ReSharper
+*.DotSettings.user
+
+# SQL Server files
+*.mdf
+*.ldf
+
+# Local database
+*.dbmdl
+
+# JetBrains Rider
+.idea/
+
+# IIS Express
+*.vspscc
+*.vssscc
+*.scc
+
+# Coverage & test results
+TestResults/
+*.coverage
+*.coveragexml
+*.codecoverage
+*.trx
+
+# TFS
+$tf/
+
+# Deployment artifacts
+.publish/
+
+doc/
+Videos/
+x64/
+Images/
+OpenCV/
+
+# Rider
+.idea/
+*.sln.iml
+
+# Build directories
+build/
+BuildOutput/
+out/
+
+# Temporary ASP.NET Files
+Temporary ASP.NET Files/
+
+# Others
+*.ncrunch*
+*.cache
+ClientBin/
