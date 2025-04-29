@@ -1,4 +1,5 @@
 // utils.h
 #pragma once
 
-void LSB();
+void encode_LSB();
+void decode_LSB();

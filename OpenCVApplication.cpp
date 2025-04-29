@@ -429,6 +429,9 @@ void showHistogram(const std::string& name, int* hist, const int  hist_cols, con
 
 int main() 
 {
+
+	// TODO() keep ctracck if the system is little endian or big endian
+
 	cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_FATAL);
     projectPath = _wgetcwd(0, 0);
 
