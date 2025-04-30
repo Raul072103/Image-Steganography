@@ -4,8 +4,6 @@
 #include <stdexcept>
 #include <vector>
 
-
-// getBit 
 bool getBit(std::vector<byte>& secret, int n) {
 
 	// 1 byte = 8 bits => total = secretLength * 8

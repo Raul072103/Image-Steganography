@@ -2,5 +2,6 @@
 
 #include "common.h"
 #include <iostream>
+#include <vector>
 
-bool getBit(byte* secret, int secretLength, int n);
+bool getBit(std::vector<byte>& secret, int n);
