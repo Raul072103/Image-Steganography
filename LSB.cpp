@@ -29,7 +29,11 @@ Mat encode_grayscale(Mat src, byte* secret, int secretLength, int noBits) {
 
 			// creates the bitMask to be combined with graylevel
 			for (int k = 0; k < noBits; k++) {
-				bitMask = bitMask << getBit(secret, secretLength, currentBit);
+				uchar currentBitPostion = 0b00000000;
+				currentBitPostion = currentBitPostion | getBit(secret, secretLength, currentBit);
+				currentBitPostion = currentBitPostion << k;
+
+				bitMask = bitMask | currentBitPostion;
 				currentBit += 1;
 			}
 
