@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "secret.h"
 #include "common.h"
 #include <iostream>
 #include <stdexcept>

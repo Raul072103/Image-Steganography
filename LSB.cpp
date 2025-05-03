@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "common.h"
 #include "utils.h"
+#include "secret.h"
 
 #include <iostream>
 #include <vector>
@@ -13,9 +14,24 @@
 // TODO() handle different secret formats, input from keyboard, select an image, or select a file
 // TODO() the above means to also store some header information
 
+std::vector<byte> constructEmptySecretWithHeader(Mat src) {
+
+	int height = src.rows;
+	int width = src.cols;
+
+	std::vector<byte> secret;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+
+		}
+	}
+
+}
+
 
 // This function should be called only if the safety checks have been made and the secret is small enough to be encoded.
-Mat encode_grayscale(Mat src, std::vector<byte>& secret, int noBits) {
+Mat encode_grayscale(Mat src, SecretHeader header, std::vector<byte>& secret, int noBits) {
 
 	if (noBits > 8 || noBits < 1) {
 		throw std::out_of_range("encode_grayscale: noBits out of index");
@@ -25,10 +41,12 @@ Mat encode_grayscale(Mat src, std::vector<byte>& secret, int noBits) {
 	int width = src.cols;
 	Mat dst = src.clone();
 
-	int currentBit = 0;
+	int currentBit = header.headerSizeBytes * 8;
+	unsigned int secretSize = header.headerSizeBytes * 8 + header.secretSizeBits;
 
-	for (int i = 0; i < height && currentBit < secret.size(); i++) {
-		for (int j = 0; j < width && currentBit < secret.size(); j++) {
+
+	for (int i = 0; i < height && currentBit < secretSize; i++) {
+		for (int j = 0; j < width && currentBit < secretSize; j++) {
 			
 			uchar grayLevel = src.at<uchar>(i, j);
 
@@ -54,12 +72,12 @@ Mat encode_grayscale(Mat src, std::vector<byte>& secret, int noBits) {
 	return dst;
 }
 
-std::vector<byte> decode_grayscale(const Mat& encoded, int secretBitLength, int noBits) {
+std::vector<byte> decode_grayscale(const Mat& encoded, int noBits) {
 	if (noBits < 1 || noBits > 8) {
 		throw std::out_of_range("decode_grayscale: noBits must be in [1, 8]");
 	}
 
-	std::vector<byte> secret((secretBitLength + 7) / 8, 0);  // allocate enough bytes
+	std::vector<byte> secret;
 	int height = encoded.rows;
 	int width = encoded.cols;
 
