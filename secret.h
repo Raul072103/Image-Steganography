@@ -80,7 +80,7 @@ enum class EncodingMethod {
 };
 
 struct LSBHeader {
-
+	int bitsUsedPerChannel;
 };
 
 struct SecretHeader {
@@ -89,6 +89,10 @@ struct SecretHeader {
 	EncodingMethod encodingMethod; // the method used to encode the secret
 	std::string name;			   // name contains also the extension (.png, .jpg, .txt, .exe etc)
 	unsigned int secretSizeBits;   // secret size in bits
+
+	union encodingMethod {
+
+	};
 };
 
 std::vector<byte> encodeSecretHeader(SecretHeader header);

@@ -1,3 +1,9 @@
+### TODO():
+	- add struct inside header based on encoding method
+	- modify secret header encoding and decoding methods
+	- finish encoding and decoding methods for LSB
+	- find the application flow
+
 1. Least Significant Bit (LSB) Replacement (Sequential)
 2. LSB with Random Pixel Selection
 3. Discrete Cosine Transform (DCT) Steganography (JPEG)
