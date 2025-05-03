@@ -4,11 +4,39 @@
 	- finish encoding and decoding methods for LSB [x]
 	- find the application flow []
 
-1. Least Significant Bit (LSB) Replacement (Sequential)
-2. LSB with Random Pixel Selection
-3. Discrete Cosine Transform (DCT) Steganography (JPEG)
-4. Frequency Domain Steganography (Wavelet Transform)
-5. My method:
+### Application Flow
+
+First 2 options:
+- decode
+- encode
+
+1. Decode
+
+- this should be done automatically, based on the encoding method saved in the header
+- decode message
+
+Based on encodingFormat:
+	- IMAGE, display image
+	- FILE, save file 
+	- USER INPUT, 
+  
+Display Statistics:
+	- time do decode
+	- encoding method used 
+	- encoding header
+
+1. Encode:
+   
+	1. Choose type of secret format
+	2. Choose secret
+	3. Choose encoding method
+		- (if possible check if the encoding method can work on that secret)
+
+2. Least Significant Bit (LSB) Replacement (Sequential)
+3. LSB with Random Pixel Selection
+4. Discrete Cosine Transform (DCT) Steganography (JPEG)
+5. Frequency Domain Steganography (Wavelet Transform)
+6. My method:
    
    - somethign with frequency analysis
    - choose more bits to hide the message based on the frequency of the respective color
