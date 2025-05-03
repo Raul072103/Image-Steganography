@@ -31,6 +31,10 @@ Display Statistics:
 	2. Choose secret
 	3. Choose encoding method
 		- (if possible check if the encoding method can work on that secret)
+		- return an error if it cannot encode the message
+	4. Show statistics
+		- how much time it took
+		- etc
 
 2. Least Significant Bit (LSB) Replacement (Sequential)
 3. LSB with Random Pixel Selection
