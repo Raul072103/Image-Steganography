@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-#include <cstring>  // for memcpy
+#include <cstring>
 
 // Helper: write 4-byte unsigned int in big-endian
 void writeUInt(std::vector<byte>& buffer, unsigned int value) {
@@ -16,7 +16,7 @@ void writeUInt(std::vector<byte>& buffer, unsigned int value) {
 }
 
 // Helper: read 4-byte unsigned int from offset
-unsigned int readUInt(const std::vector<byte>& buffer, size_t& offset) {
+unsigned int readUInt(const std::vector<byte>& buffer, unsigned int offset) {
 	if (offset + 4 > buffer.size())
 		throw std::out_of_range("readUInt: buffer overrun");
 
@@ -30,20 +30,16 @@ unsigned int readUInt(const std::vector<byte>& buffer, size_t& offset) {
 std::vector<byte> encodeSecretHeader(SecretHeader header) {
 	std::vector<byte> result;
 
-	// Write placeholder for header size (we'll fix this at the end)
-	writeUInt(result, 0); // placeholder
+	writeUInt(result, 0);
 
-	// Write format
 	writeUInt(result, static_cast<unsigned int>(header.format));
 
-	// Write name
 	writeUInt(result, header.name.size());
 	result.insert(result.end(), header.name.begin(), header.name.end());
 
-	// Write secretSize
 	writeUInt(result, header.secretSizeBits);
 
-	// Now go back and write the correct header size (total length)
+	// Write the header size
 	unsigned int actualSize = result.size();
 	result[0] = (actualSize >> 24) & 0xFF;
 	result[1] = (actualSize >> 16) & 0xFF;
@@ -54,26 +50,36 @@ std::vector<byte> encodeSecretHeader(SecretHeader header) {
 }
 
 SecretHeader decodeSecretHeader(std::vector<byte>& buffer) {
-	size_t offset = 0;
+	unsigned int offset = 0;
 
 	unsigned int headerSize = readUInt(buffer, offset);
+	offset += 4;
 	unsigned int formatInt = readUInt(buffer, offset);
+	offset += 4;
 	if (formatInt > 2)
 		throw std::invalid_argument("Invalid SecretFormat");
 
 	unsigned int nameSize = readUInt(buffer, offset);
+	offset += 4;
+
 	if (offset + nameSize > buffer.size())
 		throw std::out_of_range("decodeSecretHeader: name exceeds buffer");
 
-	std::string name(reinterpret_cast<const char*>(&buffer[offset]), nameSize);
+	std::string name;
+	
+	for (int i = 0; i < nameSize; i++) {
+		name.push_back(char(buffer[offset+i]));
+	}
+
 	offset += nameSize;
 
 	unsigned int secretSize = readUInt(buffer, offset);
 
-	return SecretHeader{
-		.headerSizeBytes = headerSizeBytes,
-		.format = static_cast<SecretFormat>(formatInt),
-		.name = name,
-		.secretSizeBits = secretSizeBits
-	};
+	SecretHeader header;
+	header.headerSizeBytes = headerSize;
+	header.format = static_cast<SecretFormat>(formatInt);
+	header.name = name;
+	header.secretSizeBits = secretSize;
+
+	return header;
 }
