@@ -75,11 +75,20 @@ enum class SecretFormat {
 	STRING
 };
 
+enum class EncodingMethod {
+	LSB,
+};
+
+struct LSBHeader {
+
+};
+
 struct SecretHeader {
-	unsigned int headerSizeBytes; // size of header in bytes
-	SecretFormat format;		  // format of the secret encoded
-	std::string name;			  // name contains also the extension (.png, .jpg, .txt, .exe etc)
-	unsigned int secretSizeBits;  // secret size in bits
+	unsigned int headerSizeBytes;  // size of header in bytes
+	SecretFormat format;		   // format of the secret encoded
+	EncodingMethod encodingMethod; // the method used to encode the secret
+	std::string name;			   // name contains also the extension (.png, .jpg, .txt, .exe etc)
+	unsigned int secretSizeBits;   // secret size in bits
 };
 
 std::vector<byte> encodeSecretHeader(SecretHeader header);
