@@ -25,7 +25,7 @@ Display Statistics:
 	- encoding method used 
 	- encoding header
 
-1. Encode:
+2. Encode:
    
 	1. Choose type of secret format
 	2. Choose secret
@@ -36,11 +36,13 @@ Display Statistics:
 		- how much time it took
 		- etc
 
-2. Least Significant Bit (LSB) Replacement (Sequential)
-3. LSB with Random Pixel Selection
-4. Discrete Cosine Transform (DCT) Steganography (JPEG)
-5. Frequency Domain Steganography (Wavelet Transform)
-6. My method:
+
+
+1. Least Significant Bit (LSB) Replacement (Sequential)
+2. LSB with Random Pixel Selection
+3. Discrete Cosine Transform (DCT) Steganography (JPEG)
+4. Frequency Domain Steganography (Wavelet Transform)
+5. My method:
    
    - somethign with frequency analysis
    - choose more bits to hide the message based on the frequency of the respective color

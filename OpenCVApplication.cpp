@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "common.h"
 #include "LSB.h"
+#include "utils.h"
+#include "secret.h"
 #include <opencv2/core/utils/logger.hpp>
 
 wchar_t* projectPath;
@@ -437,16 +439,31 @@ int main()
 	{
 		system("cls");
 		destroyAllWindows();
-		printf("Menu:\n");
-		printf("");
-		printf(" 0 - Exit\n\n");
-		printf("Option: ");
-		scanf("%d",&op);
+		printf(" Menu:\n");
+		
+		// 2 options - decode, encode
+		printf(" 1 - Decode\n");
+		printf(" 2 - Encode\n");
+		scanf("%d", &op);
+		printf("\n");
+
 		switch (op)
 		{
-			case 1:
-				say_hello();
-				break;
+		case 0:
+			break;
+
+		// DECODE
+		case 1:
+		
+			break;
+
+		// ENCODE
+		case 2:
+			break;
+
+		default:
+			printf("You can only choose encode or decode\n");
+			break;
 		}
 	}
 	while (op!=0);

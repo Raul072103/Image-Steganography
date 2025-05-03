@@ -5,6 +5,34 @@
 #include <stdexcept>
 #include <vector>
 
+
+void decodeMessage() {
+	// get image
+	// choose decoding method
+	int encodingMethod;
+
+	// 3 options - LSB, PVD, BSP
+	printf(" 0 - Exit");
+	printf(" 1 - LSB\n");
+	scanf("%d", &encodingMethod);
+	printf("\n");
+
+	switch (encodingMethod)
+	{
+	case 0:
+		break;
+
+		// LSB
+	case 1:
+		break;
+
+	default:
+		printf("You can only choose encode or decode\n");
+		break;
+	}
+
+}
+
 bool getBit(std::vector<byte>& secret, int n) {
 
 	// 1 byte = 8 bits => total = secretLength * 8
