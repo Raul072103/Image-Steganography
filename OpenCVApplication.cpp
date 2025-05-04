@@ -6,6 +6,7 @@
 #include "LSB.h"
 #include "utils.h"
 #include "secret.h"
+
 #include <opencv2/core/utils/logger.hpp>
 
 wchar_t* projectPath;
@@ -398,14 +399,15 @@ void testMouseClick()
 	}
 }
 
-/* Histogram display function - display a histogram using bars (simlilar to L3 / Image Processing)
-Input:
-name - destination (output) window name
-hist - pointer to the vector containing the histogram values
-hist_cols - no. of bins (elements) in the histogram = histogram image width
-hist_height - height of the histogram image
-Call example:
-showHistogram ("MyHist", hist_dir, 255, 200);
+/* 
+	Histogram display function - display a histogram using bars (simlilar to L3 / Image Processing)
+	Input:
+	name - destination (output) window name
+	hist - pointer to the vector containing the histogram values
+	hist_cols - no. of bins (elements) in the histogram = histogram image width
+	hist_height - height of the histogram image
+	Call example:
+	showHistogram ("MyHist", hist_dir, 255, 200);
 */
 void showHistogram(const std::string& name, int* hist, const int  hist_cols, const int hist_height)
 {
@@ -454,7 +456,9 @@ int main()
 
 		// DECODE
 		case 1:
-		
+			system("cls");
+			printf(" Choose image to decode!\n");
+			decodeMessage();
 			break;
 
 		// ENCODE

@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "secret.h"
 #include "common.h"
 
@@ -27,17 +28,23 @@ unsigned int readUInt(const std::vector<byte>& buffer, unsigned int offset) {
 std::vector<byte> encodeSecretHeader(SecretHeader header) {
 	std::vector<byte> result;
 
+	// HederSizeBytes
 	writeUInt(result, 0);
 
+	// Format 
 	writeUInt(result, static_cast<unsigned int>(header.format));
 
-	writeUInt(result, header.name.size());
-	result.insert(result.end(), header.name.begin(), header.name.end());
-
-	writeUInt(result, header.secretSizeBits);
-
+	// Encoding Method
 	writeUInt(result, static_cast<unsigned int>(header.encodingMethod));
 
+	// Secret name
+	writeUInt(result, header.name.size());
+	result.insert(result.end(), std::begin(header.name), std::end(header.name));
+
+	// SecretSizeBits
+	writeUInt(result, header.secretSizeBits);
+
+	// Header based on encoding method
 	switch (header.encodingMethod) {
 	case EncodingMethod::LSB:
 		writeUInt(result, header.encodingHeader.lsb.bitsUsedPerChannel);
@@ -60,32 +67,38 @@ std::vector<byte> encodeSecretHeader(SecretHeader header) {
 SecretHeader decodeSecretHeader(std::vector<byte>& buffer) {
 	unsigned int offset = 0;
 
+	// HeaderSizeBytes
 	unsigned int headerSize = readUInt(buffer, offset);
 	offset += 4;
+
+	// Secret format
 	unsigned int formatInt = readUInt(buffer, offset);
 	offset += 4;
 	if (formatInt > 2)
 		throw std::invalid_argument("Invalid SecretFormat");
 
+	// Name size
 	unsigned int nameSize = readUInt(buffer, offset);
 	offset += 4;
 
 	if (offset + nameSize > buffer.size())
 		throw std::out_of_range("decodeSecretHeader: name exceeds buffer");
 
-	std::string name;
-	
-	for (int i = 0; i < nameSize; i++) {
-		name.push_back(char(buffer[offset+i]));
-	}
+	std::string name(buffer.begin() + offset, buffer.begin() + offset + nameSize);
 
 	offset += nameSize;
 
+	// SecretSizeBites
+	unsigned int secretSize = readUInt(buffer, offset);
+	offset += 4;
+
+	// Encoding method
 	unsigned int methodInt = readUInt(buffer, offset);
 	offset += 4;
 
 	EncodingMethod encodingMethod = static_cast<EncodingMethod>(methodInt);
 
+	// Encoding Header
 	EncodingHeader encodingHeader;
 
 	switch (encodingMethod) {
@@ -96,9 +109,6 @@ SecretHeader decodeSecretHeader(std::vector<byte>& buffer) {
 	default:
 		throw std::invalid_argument("Invalid EncodingMethod");
 	}
-
-
-	unsigned int secretSize = readUInt(buffer, offset);
 
 	SecretHeader header;
 	header.headerSizeBytes = headerSize;
