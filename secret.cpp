@@ -2,11 +2,12 @@
 #include "secret.h"
 #include "common.h"
 #include "json.hpp"
-using json = nlohmann::json;
 
 #include <vector>
 #include <string>
 #include <stdexcept>
+
+using json = nlohmann::json;
 
 // Helper: write 4-byte unsigned int in big-endian
 void writeUInt(std::vector<byte>& buffer, unsigned int value) {
@@ -123,7 +124,6 @@ SecretHeader decodeSecretHeader(std::vector<byte>& buffer) {
 	return header;
 }
 
-// JSON Serialization of SecretHeader
 std::string serializeSecretHeader(const SecretHeader& header) {
 	json j;
 	j["headerSizeBytes"] = header.headerSizeBytes;
@@ -138,7 +138,6 @@ std::string serializeSecretHeader(const SecretHeader& header) {
 			{"bitsUsedPerChannel", header.encodingHeader.lsb.bitsUsedPerChannel}
 		};
 	}
-	// Add additional methods here as needed.
 
 	return j.dump();  // Convert JSON object to string
 }
@@ -157,7 +156,6 @@ SecretHeader deserializeSecretHeader(const std::string& jsonStr) {
 	if (header.encodingMethod == EncodingMethod::LSB) {
 		header.encodingHeader.lsb.bitsUsedPerChannel = j["encodingHeader"]["bitsUsedPerChannel"].get<uint32_t>();
 	}
-	// Add additional methods here as needed.
 
 	return header;
 }

@@ -4,11 +4,27 @@
 #include "common.h"
 #include "LSB.h"
 
+#include <fstream>
+#include <sstream>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 #include <opencv2/core/utils/logger.hpp>
 
+const std::string SECRET_HEADER_PATH = "/json/header.json";
+
+SecretHeader loadSecretHeaderFromFile(const std::string& filePath) {
+	std::ifstream file(filePath);
+	if (!file.is_open()) {
+		throw std::runtime_error("Failed to open JSON file: " + filePath);
+	}
+
+	std::stringstream buffer;
+	buffer << file.rdbuf();
+	std::string jsonStr = buffer.str();
+
+	return deserializeSecretHeader(jsonStr);
+}
 
 bool isImageGrayscale(Mat& img) {
 
@@ -41,6 +57,10 @@ void decodeMessage() {
 		imageToDecode = imread(fname, IMREAD_COLOR);
 		isGrayScale = isImageGrayscale(imageToDecode);
 
+		// get secret header - convention the secret header is stored on the same path as the picture + /json/header.json
+		std::string secretHeaderPath = fname + SECRET_HEADER_PATH;
+		SecretHeader secretHeader = loadSecretHeaderFromFile(secretHeaderPath);
+
 		// choose decoding method
 		int encodingMethod;
 
@@ -55,20 +75,13 @@ void decodeMessage() {
 		case 0:
 			break;
 
-			// LSB
+		// LSB
 		case 1:
-			int bitsPerChannel;
-
-			system("cls");
-			printf("Enter bits used per channel: ");
-			scanf("%d", &bitsPerChannel);
-			printf("\n");
-
 			if (isGrayScale) {
-				secret = decode_grayscale_LSB(imageToDecode, bitsPerChannel);
+				secret = decode_grayscale_LSB(imageToDecode, secretHeader);
 			}
 			else {
-				secret = decode_color_LSB(imageToDecode, bitsPerChannel);
+				secret = decode_color_LSB(imageToDecode, secretHeader);
 			}
 
 			break;
@@ -78,7 +91,8 @@ void decodeMessage() {
 			break;
 		}
 
-		// TODO(): now that I have the secret as bytes, parse the bytes based on the header
+
+		// TODO(): construct the original secret based on the secret header
 
 		waitKey();
 		imshow("image to decode", imageToDecode);
