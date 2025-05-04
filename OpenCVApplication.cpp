@@ -457,12 +457,13 @@ int main()
 		// DECODE
 		case 1:
 			system("cls");
-			printf(" Choose image to decode!\n");
 			decodeMessage();
 			break;
 
 		// ENCODE
 		case 2:
+			system("cls");
+			encodeMessage();
 			break;
 
 		default:

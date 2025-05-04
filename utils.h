@@ -9,6 +9,7 @@
 
 // Application flow functions
 void decodeMessage();
+void encodeMessage();
 
 // Encoding utility functions
 std::vector<byte> convertSecretToBytes();
