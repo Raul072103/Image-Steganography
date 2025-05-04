@@ -1,7 +1,10 @@
 #pragma once
 
 #include "common.h"
+#include "json.hpp"
+
 #include <string>
+
 
 /*
 	
@@ -99,3 +102,6 @@ struct SecretHeader {
 
 std::vector<byte> encodeSecretHeader(SecretHeader header);
 SecretHeader decodeSecretHeader(std::vector<byte>& secret);
+
+std::string serializeSecretHeader(const SecretHeader& header);
+SecretHeader deserializeSecretHeader(const std::string& jsonStr);

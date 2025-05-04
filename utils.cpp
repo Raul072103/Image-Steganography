@@ -104,5 +104,5 @@ bool getBit(std::vector<byte>& secret, int n) {
 }
 
 std::vector<byte> convertSecretToBytes() {
-
+	return std::vector<byte>();
 }
