@@ -9,9 +9,63 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <windows.h>
 #include <opencv2/core/utils/logger.hpp>
+#include <opencv2/opencv.hpp>
 
 const std::string SECRET_HEADER_PATH = "/json/header.json";
+
+void processDecodedSecret(const std::vector<byte>& secret, const SecretHeader& header, const std::string& imagePath) {
+	size_t lastSlash = imagePath.find_last_of("/\\");
+	std::string baseFolder = imagePath.substr(0, lastSlash);
+	std::string outputFolder = baseFolder + "\\decode";
+
+	// Ensure output folder exists
+	CreateDirectoryA(outputFolder.c_str(), NULL);
+
+	std::string outputPath = outputFolder + "\\" + header.name;
+
+	switch (header.format) {
+	case SecretFormat::STRING: {
+		std::string message(secret.begin(), secret.end());
+		printf("Decoded string:\n%s\n", message.c_str());
+		break;
+	}
+
+	case SecretFormat::FILE: {
+		std::ofstream outFile(outputPath, std::ios::binary);
+		if (!outFile.is_open()) {
+			printf("Failed to write decoded file to: %s\n", outputPath.c_str());
+			return;
+		}
+		outFile.write(reinterpret_cast<const char*>(secret.data()), secret.size());
+		outFile.close();
+		printf("Decoded file saved to: %s\n", outputPath.c_str());
+		break;
+	}
+
+	case SecretFormat::IMAGE: {
+		Mat decodedImage = imdecode(secret, cv::IMREAD_UNCHANGED);
+		if (decodedImage.empty()) {
+			printf("Failed to decode image from secret data.\n");
+			return;
+		}
+
+		if (!imwrite(outputPath, decodedImage)) {
+			printf("Failed to write decoded image to: %s\n", outputPath.c_str());
+			return;
+		}
+
+		printf("Decoded image saved to: %s\n", outputPath.c_str());
+		break;
+	}
+
+	default:
+		printf("Unknown secret format.\n");
+		break;
+	}
+}
+
 
 SecretHeader loadSecretHeaderFromFile(const std::string& filePath) {
 	std::ifstream file(filePath);
@@ -93,7 +147,7 @@ void decodeMessage() {
 
 
 		// TODO(): construct the original secret based on the secret header
-
+		processDecodedSecret(secret, secretHeader, fname);
 		waitKey();
 		imshow("image to decode", imageToDecode);
 	}
