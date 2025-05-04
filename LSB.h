@@ -6,9 +6,6 @@
 #include <vector>
 #include <opencv2/core/utils/logger.hpp>
 
-void encode_LSB();
-void decode_LSB();
-
 Mat encode_grayscale_LSB(const Mat& src, SecretHeader header, std::vector<byte>& secret);
 Mat encode_color_LSB(const Mat& src, SecretHeader header, std::vector<byte>& secret);
 

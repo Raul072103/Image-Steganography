@@ -34,7 +34,6 @@ void decodeMessage() {
 
 	std::vector<byte> secret;
 
-
 	char fname[MAX_PATH];
 	while (openFileDlg(fname))
 	{
@@ -59,12 +58,18 @@ void decodeMessage() {
 			// LSB
 		case 1:
 			int bitsPerChannel;
+
 			system("cls");
 			printf("Enter bits used per channel: ");
 			scanf("%d", &bitsPerChannel);
 			printf("\n");
 
-			secret = decode_grayscale_LSB();
+			if (isGrayScale) {
+				secret = decode_grayscale_LSB(imageToDecode, bitsPerChannel);
+			}
+			else {
+				secret = decode_color_LSB(imageToDecode, bitsPerChannel);
+			}
 
 			break;
 
@@ -73,6 +78,7 @@ void decodeMessage() {
 			break;
 		}
 
+		// TODO(): now that I have the secret as bytes, parse the bytes based on the header
 
 		waitKey();
 		imshow("image to decode", imageToDecode);
