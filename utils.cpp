@@ -267,7 +267,7 @@ void encodeMessage() {
 			header.format = SecretFormat::IMAGE;
 			header.name = extractFileName(secretPath);
 			header.secretSizeBits = secret.size() * 8;
-
+			break;
 		}
 
 		break;
@@ -353,11 +353,19 @@ void encodeMessage() {
 		header.encodingMethod = EncodingMethod::LSB;
 		header.encodingHeader.lsb = lsbHeader;
 
-		if (isGrayScale) {
-			encodedImage = encode_grayscale_LSB(imageToEmbed, header, secret);
+		try {
+			if (isGrayScale) {
+				encodedImage = encode_grayscale_LSB(imageToEmbed, header, secret);
+			}
+			else {
+				encodedImage = encode_color_LSB(imageToEmbed, header, secret);
+			}
 		}
-		else {
-			encodedImage = encode_color_LSB(imageToEmbed, header, secret);
+		catch (const std::out_of_range& e) {
+			printf(e.what());
+			imshow("couldn't embed the image", imageToEmbed);
+			waitKey(0);
+			return;
 		}
 		break;
 	}
@@ -411,6 +419,9 @@ void encodeMessage() {
 
 	printf("Encoded image saved to: %s\n", outputFolder.c_str());
 	printf("Secret header saved to: %s\n", headerFilePath.c_str());
+	imshow("image with secret", encodedImage);
+	imshow("src", imageToEmbed);
+	waitKey(0);
 }
 
 bool getBit(std::vector<byte>& secret, int n) {

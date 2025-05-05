@@ -11,17 +11,30 @@
 #include <stdexcept>
 #include <opencv2/core/utils/logger.hpp>
 
+std::string getSecretTooBigMessage(size_t secretBits, size_t maxBits) {
+	char buffer[200];
+	snprintf(buffer, sizeof(buffer),
+		"Cannot embed secret: trying to embed %zu bits, but maximum allowed is %zu bits.",
+		secretBits, maxBits);
+	return std::string(buffer);
+}
 
 Mat encode_grayscale_LSB(const Mat &src, SecretHeader header, std::vector<byte>& secret) {
 
 	int noBits = header.encodingHeader.lsb.bitsUsedPerChannel;
-
 	if (noBits > 8 || noBits < 1) {
 		throw std::out_of_range("encode_grayscale: noBits out of index");
 	}
 
 	int height = src.rows;
 	int width = src.cols;
+
+	int maximumBitsToEncode = height * width * noBits;
+
+	if (secret.size() * 8 >= maximumBitsToEncode) {
+		throw std::out_of_range(getSecretTooBigMessage(secret.size() * 8, maximumBitsToEncode));
+	}
+
 	Mat dst = src.clone();
 
 	int currentBit = 0;
@@ -64,6 +77,13 @@ Mat encode_color_LSB(const Mat& src, SecretHeader header, std::vector<byte>& sec
 
 	int height = src.rows;
 	int width = src.cols;
+
+	int maximumBitsToEncode = height * width * noBits;
+
+	if (secret.size() * 8 >= maximumBitsToEncode) {
+		throw std::out_of_range(getSecretTooBigMessage(secret.size() * 8, maximumBitsToEncode));
+	}
+
 	Mat dst = src.clone();
 
 	int currentBit = 0;
@@ -119,7 +139,7 @@ std::vector<byte> decode_grayscale_LSB(const Mat& encoded, SecretHeader header) 
 		for (int j = 0; j < width && currentBit < secretSize; j++) {
 			uchar grayLevel = encoded.at<uchar>(i, j);
 
-			for (int k = 0; k < noBits && noBits < secretSize; k++, currentBit++) {
+			for (int k = 0; k < noBits && currentBit < secretSize; k++, currentBit++) {
 				uchar extractedBit = (grayLevel >> k) & 1;
 
 				int byteIndex = currentBit / 8;
