@@ -365,7 +365,7 @@ void testSnap()
 
 void MyCallBackFunc(int event, int x, int y, int flags, void* param)
 {
-	//More examples: http://opencvexamples.blogspot.com/2014/01/detect-mouse-clicks-and-moves-on-image.html
+	// More examples: http://opencvexamples.blogspot.com/2014/01/detect-mouse-clicks-and-moves-on-image.html
 	Mat* src = (Mat*)param;
 	if (event == EVENT_LBUTTONDOWN)
 		{

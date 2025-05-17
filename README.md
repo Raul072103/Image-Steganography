@@ -3,6 +3,8 @@
 	- modify secret header encoding and decoding methods [x]
 	- finish encoding and decoding methods for LSB [x]
 	- find the application flow []
+	- put SHA256 hash inside the secret header
+	- generate functions that automatically create secret messages of certain sizes
 
 ### Application Flow
 

@@ -3,6 +3,7 @@
 #include "secret.h"
 #include "common.h"
 #include "LSB.h"
+#include "picosha2.h"
 
 #include <fstream>
 #include <sstream>
@@ -249,7 +250,6 @@ void encodeMessage() {
 		secret.assign(userInput.begin(), userInput.end());
 		header.format = SecretFormat::STRING;
 		header.name = "secret.txt";
-		header.secretSizeBits = secret.size() * 8;
 
 		break;
 	}
@@ -266,7 +266,6 @@ void encodeMessage() {
 			
 			header.format = SecretFormat::IMAGE;
 			header.name = extractFileName(secretPath);
-			header.secretSizeBits = secret.size() * 8;
 			break;
 		}
 
@@ -294,7 +293,6 @@ void encodeMessage() {
 		secret = std::vector<byte>((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 		header.format = SecretFormat::FILE;
 		header.name = extractFileName(filePath);
-		header.secretSizeBits = secret.size() * 8;
 		break;
 	}
 
@@ -303,6 +301,14 @@ void encodeMessage() {
 		return;
 
 	}
+	
+	// Save the size
+	header.secretSizeBits = secret.size() * 8;
+
+	// Calculate the SHA256 hash
+	std::string secretHash;
+	picosha2::hash256_hex_string(secret.begin(), secret.end(), secretHash);
+	header.secretHash = secretHash;
 
 	// Step 3: Read the image to embed the secret into
 	Mat imageToEmbed;
@@ -390,17 +396,10 @@ void encodeMessage() {
 	}
 
 
-	std::string imageEncodedName;
-
-	if (header.format == SecretFormat::FILE || header.format == SecretFormat::STRING) {
-		imageEncodedName = getFileNameWithoutExtension(header.name) + ".bmp";
-	}
-	else {
-		imageEncodedName = header.name;
-	}
+	std::string imageEncodedName = getFileNameWithoutExtension(header.name) + ".bmp";
 
 	// Save the encoded image
-	if (!imwrite(outputFolder + header.name, encodedImage)) {
+	if (!imwrite(outputFolder + imageEncodedName, encodedImage)) {
 		printf("Failed to write encoded image.\n");
 		return;
 	}
