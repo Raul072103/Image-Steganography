@@ -196,6 +196,14 @@ void decodeMessage() {
 			break;
 		}
 
+		std::string decodedStringHash;
+		picosha2::hash256_hex_string(secret.begin(), secret.end(), decodedStringHash);
+
+		if (secretHeader.secretHash != decodedStringHash) {
+			printf("The hashes don't match => ERROR!!");
+			imshow("image to decode", imageToDecode);
+			waitKey(0);
+		}
 
 		processDecodedSecret(secret, secretHeader, fname);
 		imshow("image to decode", imageToDecode);
@@ -258,17 +266,23 @@ void encodeMessage() {
 	case 2:
 	{
 		printf("Select an image file to embed the secret:\n");
-		char secretPath[MAX_PATH];
-		while (openFileDlg(secretPath)) {
-			Mat secretImage = imread(secretPath, IMREAD_COLOR);
-
-			secret = generateImageSecret(secretImage);
-			
-			header.format = SecretFormat::IMAGE;
-			header.name = extractFileName(secretPath);
-			break;
+		
+		char filePath[MAX_PATH];
+		if (!openFileDlg(filePath)) {
+			printf("Failed to select file.\n");
+			return;
 		}
 
+		// Read the file into a vector of bytes
+		std::ifstream file(filePath, std::ios::binary);
+		if (!file.is_open()) {
+			printf("Failed to open file: %s\n", filePath);
+			return;
+		}
+
+		secret = std::vector<byte>((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+		header.format = SecretFormat::IMAGE;
+		header.name = extractFileName(filePath);
 		break;
 	}
 
