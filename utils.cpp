@@ -3,6 +3,7 @@
 #include "secret.h"
 #include "common.h"
 #include "LSB.h"
+#include "DCT.h"
 #include "picosha2.h"
 
 #include <fstream>
@@ -364,6 +365,9 @@ void encodeMessage() {
 	printf(" Select encoding method:\n");
 	printf(" 0 - Exit\n");
 	printf(" 1 - LSB\n");
+	printf(" 2 - PVD\n");
+	printf(" 3 - BSP\n");
+	printf(" 4 - DCT\n");
 	scanf("%d", &encodingMethod);
 	getchar();
 	printf("\n");
@@ -421,7 +425,15 @@ void encodeMessage() {
 
 	// DCT
 	case 4:
-		printf("NOT IMPLEMENTED YET\n");
+		try {
+			encodedImage = encode_DCT(imageToEmbed, header, secret);
+		}
+		catch (const std::out_of_range& e) {
+			printf(e.what());
+			imshow("couldn't embed the image", imageToEmbed);
+			waitKey(0);
+			return;
+		}
 		break;
 
 	default:

@@ -30,15 +30,49 @@ const int zigzagIndex[64][2] = {
 	{6,5},{7,4},{7,5},{6,6},{5,7},{6,7},{7,6},{7,7}
 };
 
+
+Mat cropTo8x8(const Mat& img) {
+	int croppedWidth = img.cols - (img.cols % 8);
+	int croppedHeight = img.rows - (img.rows % 8);
+
+	Rect roi(0, 0, croppedWidth, croppedHeight);
+
+	return img(roi).clone();
+}
+
+float alpha(int x) {
+	return (x == 0) ? (1.0f / sqrt(2.0f)) : 1.0f;
+}
+
+std::vector<int> zigzag(const Mat& block) {
+	std::vector<int> result(64);
+	for (int i = 0; i < 64; ++i) {
+		int x = zigzagIndex[i][0];
+		int y = zigzagIndex[i][1];
+		result[i] = block.at<int>(x, y);
+	}
+	return result;
+}
+
+Mat inverseZigzag(const std::vector<int>& vec) {
+	Mat block(8, 8, CV_32S);
+	for (int i = 0; i < 64; ++i) {
+		int x = zigzagIndex[i][0];
+		int y = zigzagIndex[i][1];
+		block.at<int>(x, y) = vec[i];
+	}
+	return block;
+}
+
 Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 	// cropping step
 	Mat croppedImg = cropTo8x8(src);
 
 	// uchar to float
-	// float to 2YCrCb
 	Mat imgFloat;
 	croppedImg.convertTo(imgFloat, CV_32F);
 
+	// float to 2YCrCb
 	Mat imgYCrCb;
 	cvtColor(imgFloat, imgYCrCb, COLOR_BGR2YCrCb);
 
@@ -97,14 +131,9 @@ Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 		for (int j = 1; j < currVec.size(); j++) {
 			int coeff = currVec[j];
 
-			if (coeff > 1) {
+			if (bitPos < secret.size() && coeff > 1) {
 				currVec[j] = (currVec[j] & ~1) | getBit(secret, bitPos);
 				bitPos += 1;
-			}
-
-			if (bitPos >= secret.size()) {
-				i = sortedQuantVectors.size() + 1;
-				break;
 			}
 		}
 
@@ -153,14 +182,7 @@ Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 			}
 		}
 	}
-
-	Mat finalImgChannelZero;
-	reconstructedImg.convertTo(finalImgChannelZero, CV_8U, 1, 0);
-
-	channels[1].convertTo(channels[1], CV_8U);
-	channels[2].convertTo(channels[2], CV_8U);
-
-	channels[0] = finalImgChannelZero;
+	channels[0] = reconstructedImg;
 
 	Mat mergedYCrCb;
 	merge(channels, mergedYCrCb);
@@ -168,7 +190,13 @@ Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 	Mat finalRGB;
 	cvtColor(mergedYCrCb, finalRGB, COLOR_YCrCb2BGR);
 
-	return finalRGB;
+	Mat ucharImage;
+	finalRGB.convertTo(ucharImage, CV_8UC3, 1.0, 0);
+
+	imshow("hello", ucharImage);
+	waitKey(0);
+
+	return ucharImage;
 }
 
 std::vector<byte> decode_DCT(const Mat& encoded, SecretHeader header) {
@@ -246,38 +274,4 @@ std::vector<byte> decode_DCT(const Mat& encoded, SecretHeader header) {
 	}
 
 	return decodedMessage;
-}
-
-
-Mat cropTo8x8(const Mat& img) {
-	int croppedWidth = img.cols - (img.cols % 8);
-	int croppedHeight = img.rows - (img.rows % 8);
-
-	Rect roi(0, 0, croppedWidth, croppedHeight);
-
-	return img(roi).clone();
-}
-
-float alpha(int x) {
-	return (x == 0) ? (1.0f / sqrt(2.0f)) : 1.0f;
-}
-
-std::vector<int> zigzag(const Mat& block) {
-	std::vector<int> result(64);
-	for (int i = 0; i < 64; ++i) {
-		int x = zigzagIndex[i][0];
-		int y = zigzagIndex[i][1];
-		result[i] = block.at<int>(x, y);
-	}
-	return result;
-}
-
-Mat inverseZigzag(const std::vector<int>& vec) {
-	Mat block(8, 8, CV_32S);
-	for (int i = 0; i < 64; ++i) {
-		int x = zigzagIndex[i][0];
-		int y = zigzagIndex[i][1];
-		block.at<int>(x, y) = vec[i];
-	}
-	return block;
 }
