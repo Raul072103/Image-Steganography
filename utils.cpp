@@ -168,9 +168,12 @@ void decodeMessage() {
 		// choose decoding method
 		int encodingMethod;
 
-		// 3 options - LSB, PVD, BSP
+		// 3 options - LSB, PVD, BSP, DCT
 		printf(" 0 - Exit\n");
 		printf(" 1 - LSB\n");
+		printf(" 2 - PVD\n");
+		printf(" 3 - BSP\n");
+		printf(" 4 - DCT\n");
 		scanf("%d", &encodingMethod);
 		getchar();
 		printf("\n");
@@ -189,6 +192,22 @@ void decodeMessage() {
 				secret = decode_color_LSB(imageToDecode, secretHeader);
 			}
 
+			break;
+
+		// PVD
+		case 2:
+			printf("NOT IMPLEMENTED YET\n");
+			break;
+
+
+		// BSP
+		case 3:
+			printf("NOT IMPLEMENTED YET\n");
+			break;
+
+		// DCT
+		case 4:
+			printf("NOT IMPLEMENTED YET\n");
 			break;
 
 		default:
@@ -389,6 +408,21 @@ void encodeMessage() {
 		}
 		break;
 	}
+
+	// PVD
+	case 2:
+		printf("NOT IMPLEMENTED YET\n");
+		break;
+
+	// BSP
+	case 3:
+		printf("NOT IMPLEMENTED YET\n");
+		break;
+
+	// DCT
+	case 4:
+		printf("NOT IMPLEMENTED YET\n");
+		break;
 
 	default:
 		printf("Encoding method: %d not supported\n", encodingMethod);
