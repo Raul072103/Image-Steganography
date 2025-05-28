@@ -30,14 +30,7 @@ const int zigzagIndex[64][2] = {
 	{6,5},{7,4},{7,5},{6,6},{5,7},{6,7},{7,6},{7,7}
 };
 
-// GENERAL BLOOPRINT FOR DCT TECHNIQUE
-
-Mat encode_grayscale_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
-	Mat dst;
-	return dst;
-}
-
-Mat encode_color_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
+Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 	// cropping step
 	Mat croppedImg = cropTo8x8(src);
 
@@ -178,15 +171,83 @@ Mat encode_color_DCT(const Mat& src, SecretHeader header, std::vector<byte>& sec
 	return finalRGB;
 }
 
-std::vector<byte> decode_grayscale_DCT(const Mat& encoded, SecretHeader header) {
+std::vector<byte> decode_DCT(const Mat& encoded, SecretHeader header) {
+	Mat imgFloat;
+	encoded.convertTo(imgFloat, CV_32F);
+
+	Mat imgYCrCb;
+	cvtColor(imgFloat, imgYCrCb, COLOR_BGR2YCrCb);
+
+	std::vector<Mat> channels;
+	split(imgYCrCb, channels);
+
+	Mat imgToApply = channels[0];  // luminance channel
+
+	int height = imgToApply.rows;
+	int width = imgToApply.cols;
+
+	std::vector<std::vector<int>> quantVectors;
+
+	// Extract 8x8 blocks, DCT, quantize, then read bits from LSBs
+	for (int i = 0; i < height; i += 8) {
+		for (int j = 0; j < width; j += 8) {
+			Mat block = imgToApply(Rect(j, i, 8, 8));
+
+			Mat dctBlock;
+			dct(block, dctBlock);
+
+			Mat quantized;
+			divide(dctBlock, QUANT_TABLE, quantized);
+
+			for (int x = 0; x < quantized.rows; ++x) {
+				for (int y = 0; y < quantized.cols; ++y) {
+					quantized.at<float>(x, y) = std::round(quantized.at<float>(x, y));
+				}
+			}
+
+			quantized.convertTo(quantized, CV_32S);
+			quantVectors.push_back(zigzag(quantized));
+		}
+	}
+
+	std::vector<byte> secretBits;
+
+	int totalBits = header.secretSizeBits; 
+	int bitCount = 0;
+
+	for (const auto& vec : quantVectors) {
+		for (int k = 1; k < (int)vec.size(); ++k) {
+			if (vec[k] > 1) {
+				int bit = vec[k] & 1;
+				secretBits.push_back(bit);
+				bitCount++;
+				
+				if (bitCount >= totalBits) {
+					break;
+				}
+			}
+		}
+
+		if (bitCount >= totalBits) {
+			break;
+		}
+	}
+
+	// Convert bits to bytes
 	std::vector<byte> decodedMessage;
+
+	for (int i = 0; i < header.secretSizeBits; i += 8) {
+		byte val = 0;
+		for (int b = 0; b < 8; ++b) {
+			val |= (secretBits[i + b] << (7 - b));
+		}
+
+		decodedMessage.push_back(val);
+	}
+
 	return decodedMessage;
 }
 
-std::vector<byte> decode_color_DCT(const Mat& encoded, SecretHeader header) {
-	std::vector<byte> decodedMessage;
-	return decodedMessage;
-}
 
 Mat cropTo8x8(const Mat& img) {
 	int croppedWidth = img.cols - (img.cols % 8);

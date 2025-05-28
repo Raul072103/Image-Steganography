@@ -7,8 +7,6 @@
 #include <iostream>
 #include <opencv2/core/utils/logger.hpp>
 
-Mat encode_grayscale_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret);
-Mat encode_color_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret);
+Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret);
 
-std::vector<byte> decode_grayscale_DCT(const Mat& encoded, SecretHeader header);
-std::vector<byte> decode_color_DCT(const Mat& encoded, SecretHeader header);
+std::vector<byte> decode_DCT(const Mat& encoded, SecretHeader header);
