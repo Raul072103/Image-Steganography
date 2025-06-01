@@ -79,12 +79,13 @@ Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 	std::vector<Mat> channels;
 	split(imgYCrCb, channels);
 
-	Mat imgToApply = channels[0];
+	// Y channel
+	Mat imgToApply = channels[0]; 
 
 	int height = imgToApply.rows;
 	int width = imgToApply.cols;
 
-	std::vector<std::vector<int>> sortedQuantVectors;
+	std::vector<std::vector<int>> quantizedVectors;
 
 	// split into 8x8
 	// forward DCT stage
@@ -92,30 +93,24 @@ Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 
 	for (int i = 0; i < height; i += 8) {
 		for (int j = 0; j < width; j += 8) {
-			Mat currMat = Mat(8, 8, CV_32S);
+			Mat block = imgToApply(Rect(j, i, 8, 8));
 
-			for (int u = 0; u < 8; ++u) {
-				for (int v = 0; v < 8; ++v) {
-					float sum = 0.0f;
+			// Shift pixel values by -128 
+			Mat shiftedBlock;
+			subtract(block, Scalar(128), shiftedBlock);
 
-					for (int x = 0; x < 8; ++x) {
-						for (int y = 0; y < 8; ++y) {
+			Mat dctBlock;
+			dct(shiftedBlock, dctBlock);
 
-							float pixel = imgToApply.at<float>(i+x, j+y);
-							float cu = cos(((2.0f * x + 1) * u * PI) / 16.0f);
-							float cv = cos(((2.0f * y + 1) * v * PI) / 16.0f);
-
-							sum += pixel * cu * cv;
-						}
-					}
-					float dctResult = 0.25f * alpha(u) * alpha(v) * sum;
-					float quantizedDCTResult = int(std::round(dctResult / QUANT_TABLE.at<float>(u, v)));
-
-					currMat.at<int>(u, v) = quantizedDCTResult;
+			Mat quantized(8, 8, CV_32S);
+			for (int x = 0; x < 8; ++x) {
+				for (int y = 0; y < 8; ++y) {
+					quantized.at<int>(x, y) = (int)std::round(dctBlock.at<float>(x, y) / QUANT_TABLE.at<float>(x, y));
 				}
 			}
-			// sort DCT, basically just zigZag
-			sortedQuantVectors.push_back(zigzag(currMat));
+
+			// Convert to zigzag order
+			quantizedVectors.push_back(zigzag(quantized));
 		}
 	}
 
@@ -124,14 +119,14 @@ Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 	std::vector<std::vector<int>> embeddedVec;
 	int bitPos = 0;
 
-	for (int i = 0; i < sortedQuantVectors.size(); i++) {
-		std::vector<int> currVec = sortedQuantVectors[i];
+	for (int i = 0; i < quantizedVectors.size(); i++) {
+		std::vector<int> currVec = quantizedVectors[i];
 
 		// skip the first coefficient, apparently it distorts the image the most
 		for (int j = 1; j < currVec.size(); j++) {
 			int coeff = currVec[j];
 
-			if (bitPos < secret.size() && coeff > 1) {
+			if (bitPos < header.secretSizeBits && coeff > 1) {
 				currVec[j] = (currVec[j] & ~1) | getBit(secret, bitPos);
 				bitPos += 1;
 			}
@@ -155,16 +150,22 @@ Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 	for (int i = 0; i < inverseMat.size(); i++) {
 		Mat currMat = inverseMat[i];
 
-		Mat currMatFloat;
-		currMat.convertTo(currMatFloat, CV_32F);
-
-		Mat dequantized;
-		multiply(currMatFloat, QUANT_TABLE, dequantized);
+		// Dequantize
+		Mat dequantized(8, 8, CV_32F);
+		for (int x = 0; x < 8; ++x) {
+			for (int y = 0; y < 8; ++y) {
+				dequantized.at<float>(x, y) = currMat.at<int>(x, y) * QUANT_TABLE.at<float>(x, y);
+			}
+		}
 
 		Mat idctResult;
 		idct(dequantized, idctResult);
 
-		idctMat.push_back(idctResult);
+		// Add back the 128 shift
+		Mat finalBlock;
+		add(idctResult, Scalar(128), finalBlock);
+
+		idctMat.push_back(finalBlock);
 	}
 
 	Mat reconstructedImg = Mat::zeros(height, width, CV_32F);
@@ -191,9 +192,8 @@ Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 	cvtColor(mergedYCrCb, finalRGB, COLOR_YCrCb2BGR);
 
 	Mat ucharImage;
-	finalRGB.convertTo(ucharImage, CV_8UC3, 1.0, 0);
+	finalRGB.convertTo(ucharImage, CV_8UC3);
 
-	imshow("hello", ucharImage);
 	waitKey(0);
 
 	return ucharImage;
@@ -221,20 +221,21 @@ std::vector<byte> decode_DCT(const Mat& encoded, SecretHeader header) {
 		for (int j = 0; j < width; j += 8) {
 			Mat block = imgToApply(Rect(j, i, 8, 8));
 
-			Mat dctBlock;
-			dct(block, dctBlock);
+			Mat shiftedBlock;
+			subtract(block, Scalar(128), shiftedBlock);
 
-			Mat quantized(8, 8, CV_32FC1);
+			Mat dctBlock;
+			dct(shiftedBlock, dctBlock);
+
+			Mat quantized(8, 8, CV_32S);
 
 			for (int x = 0; x < quantized.rows; ++x) {
 				for (int y = 0; y < quantized.cols; ++y) {
-					quantized.at<float>(x, y) = std::round(dctBlock.at<float>(x, y) / QUANT_TABLE.at<float>(x, y));
+					quantized.at<int>(x, y) = (int)std::round(dctBlock.at<float>(x, y) / QUANT_TABLE.at<float>(x, y));
 				}
 			}
 
-			Mat quantizedInt;
-			quantized.convertTo(quantizedInt, CV_32S);
-			quantVectors.push_back(zigzag(quantizedInt));
+			quantVectors.push_back(zigzag(quantized));
 		}
 	}
 
@@ -246,7 +247,7 @@ std::vector<byte> decode_DCT(const Mat& encoded, SecretHeader header) {
 	for (const auto& vec : quantVectors) {
 		for (int k = 1; k < (int)vec.size(); ++k) {
 			if (vec[k] > 1) {
-				int bit = vec[k] & 1;
+				byte bit = vec[k] & 1;
 				secretBits.push_back(bit);
 				bitCount++;
 				
@@ -267,7 +268,7 @@ std::vector<byte> decode_DCT(const Mat& encoded, SecretHeader header) {
 	for (int i = 0; i < header.secretSizeBits; i += 8) {
 		byte val = 0;
 		for (int b = 0; b < 8; ++b) {
-			val |= (secretBits[i + b] << (7 - b));
+			val |= (secretBits[i + b] << b);
 		}
 
 		decodedMessage.push_back(val);
