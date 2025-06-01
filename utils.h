@@ -19,3 +19,4 @@ std::vector<byte> convertSecretToBytes();
 // Utility functions
 bool getBit(std::vector<byte>& secret, int n);
 bool isImageGrayscale(Mat& src);
+bool isImageGrayscale(const Mat& src);

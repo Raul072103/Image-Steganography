@@ -4,6 +4,7 @@
 #include "common.h"
 #include "LSB.h"
 #include "DCT.h"
+#include "PVD.h"
 #include "picosha2.h"
 
 #include <fstream>
@@ -117,6 +118,25 @@ bool isImageGrayscale(Mat& img) {
 	return false;
 }
 
+bool isImageGrayscale(const Mat& img) {
+
+	if (img.channels() == 3) {
+		for (int i = 0; i < img.rows; ++i) {
+			for (int j = 0; j < img.cols; ++j) {
+				Vec3b pixel = img.at<Vec3b>(i, j);
+
+				if (pixel[0] != pixel[1] || pixel[1] != pixel[2]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
+
 
 std::vector<byte> generateImageSecret(Mat img) {
 	std::vector<byte> secret;
@@ -197,7 +217,7 @@ void decodeMessage() {
 
 		// PVD
 		case 2:
-			printf("NOT IMPLEMENTED YET\n");
+			secret = decode_PVD(imageToDecode, secretHeader);
 			break;
 
 
@@ -415,7 +435,15 @@ void encodeMessage() {
 
 	// PVD
 	case 2:
-		printf("NOT IMPLEMENTED YET\n");
+		try {
+			encodedImage = encode_PVD(imageToEmbed, header, secret);
+		}
+		catch (const std::out_of_range& e) {
+			printf(e.what());
+			imshow("couldn't embed the image", imageToEmbed);
+			waitKey(0);
+			return;
+		}
 		break;
 
 	// BSP

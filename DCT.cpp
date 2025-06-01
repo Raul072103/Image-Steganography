@@ -262,12 +262,24 @@ std::vector<byte> decode_DCT(const Mat& encoded, SecretHeader header) {
 		}
 	}
 
+	if ((int)secretBits.size() < header.secretSizeBits) {
+		printf("ERROR\n");
+		imshow("hello", encoded);
+	}
+
+
 	// Convert bits to bytes
 	std::vector<byte> decodedMessage;
 
-	for (int i = 0; i < header.secretSizeBits; i += 8) {
+	for (int i = 0; i < secretBits.size(); i += 8) {
 		byte val = 0;
 		for (int b = 0; b < 8; ++b) {
+			
+			if (i + b >= secretBits.size() ) {
+				i = secretBits.size() + 1;
+				break;
+			}
+
 			val |= (secretBits[i + b] << b);
 		}
 
