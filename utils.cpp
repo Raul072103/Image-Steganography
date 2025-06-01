@@ -515,6 +515,7 @@ bool getBit(std::vector<byte>& secret, int n) {
 
 	// 1 byte = 8 bits => total = secretLength * 8
 	if (n < 0 || n >= secret.size() * 8) {
+		printf("index=%d\n", n);
 		throw std::out_of_range("getBit: bit index out of range");
 	}
 	

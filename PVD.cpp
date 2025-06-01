@@ -22,35 +22,52 @@ int get_range_index(int diff_abs) {
 }
 
 void encodeChannel(Mat& channel, size_t& bit_idx, std::vector<byte>& secret, const SecretHeader& header) {
+    if (bit_idx >= header.secretSizeBits) {
+        return;
+    }
+
     for (int i = 0; i < channel.rows; ++i) {
         for (int j = 0; j < channel.cols - 1; j += 2) {
             uchar g1 = channel.at<uchar>(i, j);
             uchar g2 = channel.at<uchar>(i, j + 1);
+
             int d = g2 - g1;
             int d_abs = std::abs(d);
 
             int ri = get_range_index(d_abs);
-            if (ri == -1) continue;
+            if (ri == -1) {
+                continue;
+            }
 
             int li = pvd_ranges[ri].first;
             int ui = pvd_ranges[ri].second;
             int wi = ui - li + 1;
             int n = static_cast<int>(std::floor(std::log2(wi)));
 
-            if (bit_idx + n > header.secretSizeBits) return;
+            //if (bit_idx + n > header.secretSizeBits) {
+              //  printf("COULDN'T ENCODE ALL BITS USING PVD\n");
+               // return;
+            //}
 
             int bk = 0;
             for (int b = 0; b < n; ++b) {
-                bk = (bk << 1) | getBit(secret, bit_idx);
-                ++bit_idx;
+                bk = bk | (getBit(secret, bit_idx) << b);
+                bit_idx++;
+
+                if (bit_idx >= header.secretSizeBits) {
+                    break;
+                }
             }
 
             int d_prime = (d >= 0) ? li + bk : -(li + bk);
+            //int m = (d_prime - d) / 2;
+            //int new_g1 = g1 - m;
+            //int new_g2 = g2 + m;
+
             float m = (d_prime - d) / 2.0f;
-            
-            /*
-            int new_g1;
-            int new_g2;
+
+            uchar new_g1;
+            uchar new_g2;
 
             int floor_m = static_cast<int>(floor(m));
             int ceil_m = static_cast<int>(ceil(m));
@@ -63,24 +80,29 @@ void encodeChannel(Mat& channel, size_t& bit_idx, std::vector<byte>& secret, con
                 new_g1 = g1 - floor_m;
                 new_g2 = g2 + ceil_m;
             }
-            */
-
-            int m = (d_prime - d) / 2;
-            int new_g1 = g1 - m;
-            int new_g2 = g2 + m;
+                
 
             if (new_g1 < 0 || new_g1 > 255 || new_g2 < 0 || new_g2 > 255) {
                 bit_idx -= n;
+                printf("strange");
                 continue;
             }
 
-            channel.at<uchar>(i, j) = static_cast<uchar>(new_g1);
-            channel.at<uchar>(i, j + 1) = static_cast<uchar>(new_g2);
+            channel.at<uchar>(i, j) = new_g1;
+            channel.at<uchar>(i, j + 1) = new_g2;
+
+            if (bit_idx >= header.secretSizeBits) {
+                return;
+            }
         }
     }
 }
 
-void decodeChannel(const Mat& channel, std::vector<bool>& bits, size_t total_bits) {
+void decodeChannel(const Mat& channel, std::vector<bool>& bits, size_t total_bits, SecretHeader header) {
+    if (bits.size() >= header.secretSizeBits - 1) {
+        return;
+    }
+
     for (int i = 0; i < channel.rows; ++i) {
         for (int j = 0; j < channel.cols - 1; j += 2) {
             uchar g1 = channel.at<uchar>(i, j);
@@ -98,20 +120,25 @@ void decodeChannel(const Mat& channel, std::vector<bool>& bits, size_t total_bit
             int wi = ui - li + 1;
             int n = static_cast<int>(std::floor(std::log2(wi)));
 
-            if (bits.size() + n > total_bits) {
-                return;
-            }
+            int bits_needed = total_bits - bits.size();
+            int bits_to_read = min(n, bits_needed);
 
             int bk = d_abs - li;
 
-            for (int b = n - 1; b >= 0; --b) {
+            for (int b = 0; b < bits_to_read; ++b) {
                 bits.push_back((bk >> b) & 1);
+            }
+
+            if (bits.size() >= header.secretSizeBits) {
+                break;
             }
         }
     }
 }
 
 Mat encode_PVD(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
+    printf("secret=%s\n", secret);
+    printf("size=%d\n", header.secretSizeBits);
     Mat encodedMat = src.clone();
     size_t bit_idx = 0;
 
@@ -139,9 +166,8 @@ std::vector<byte> append_bits(const std::vector<bool>& bits) {
     int bit_count = 0;
 
     for (bool bit : bits) {
-        current_byte = (current_byte << 1) | static_cast<byte>(bit);
+        current_byte |= (static_cast<byte>(bit) << bit_count);
         bit_count++;
-
         if (bit_count == 8) {
             result.push_back(current_byte);
             current_byte = 0;
@@ -150,7 +176,6 @@ std::vector<byte> append_bits(const std::vector<bool>& bits) {
     }
 
     if (bit_count > 0) {
-        current_byte <<= (8 - bit_count);  // pad with zeros
         result.push_back(current_byte);
     }
 
@@ -162,15 +187,15 @@ std::vector<byte> decode_PVD(const Mat& encoded, SecretHeader header) {
     size_t total_bits = header.secretSizeBits;
 
     if (isImageGrayscale(encoded)) {
-        decodeChannel(encoded, bits, total_bits);
+        decodeChannel(encoded, bits, total_bits, header);
     }
     else {
         std::vector<Mat> channels(3);
         split(encoded, channels);
 
-        decodeChannel(channels[0], bits, total_bits);
-        decodeChannel(channels[1], bits, total_bits);
-        decodeChannel(channels[2], bits, total_bits);
+        decodeChannel(channels[0], bits, total_bits, header);
+        decodeChannel(channels[1], bits, total_bits, header);
+        decodeChannel(channels[2], bits, total_bits, header);
     }
 
     return append_bits(bits);
