@@ -208,7 +208,7 @@ void decodeMessage() {
 
 		// DCT
 		case 4:
-			printf("NOT IMPLEMENTED YET\n");
+			secret = decode_DCT(imageToDecode, secretHeader);
 			break;
 
 		default:

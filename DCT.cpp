@@ -224,17 +224,17 @@ std::vector<byte> decode_DCT(const Mat& encoded, SecretHeader header) {
 			Mat dctBlock;
 			dct(block, dctBlock);
 
-			Mat quantized;
-			divide(dctBlock, QUANT_TABLE, quantized);
+			Mat quantized(8, 8, CV_32FC1);
 
 			for (int x = 0; x < quantized.rows; ++x) {
 				for (int y = 0; y < quantized.cols; ++y) {
-					quantized.at<float>(x, y) = std::round(quantized.at<float>(x, y));
+					quantized.at<float>(x, y) = std::round(dctBlock.at<float>(x, y) / QUANT_TABLE.at<float>(x, y));
 				}
 			}
 
-			quantized.convertTo(quantized, CV_32S);
-			quantVectors.push_back(zigzag(quantized));
+			Mat quantizedInt;
+			quantized.convertTo(quantizedInt, CV_32S);
+			quantVectors.push_back(zigzag(quantizedInt));
 		}
 	}
 
