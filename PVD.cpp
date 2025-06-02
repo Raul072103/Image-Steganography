@@ -10,7 +10,7 @@
 #include <opencv2/opencv.hpp>
 
 const std::vector<std::pair<int, int>> pvd_ranges = {
-    {0, 7}, {8, 15}, {16, 31}, {32, 63}, {64, 127}, {128, 255}
+    {0, 3}, {4, 7}, {8, 15}, {16, 31}, {32, 63}, {64, 127}
 };
 
 int get_range_index(int diff_abs) {
@@ -136,7 +136,7 @@ void decodeChannel(const Mat& channel, std::vector<bool>& bits, size_t total_bit
     }
 }
 
-Mat encode_PVD(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
+Mat encode_PVD(const Mat& src, SecretHeader& header, std::vector<byte>& secret) {
     printf("secret=%s\n", secret);
     printf("size=%d\n", header.secretSizeBits);
     Mat encodedMat = src.clone();
@@ -154,6 +154,10 @@ Mat encode_PVD(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
         encodeChannel(channels[2], bit_idx, secret, header); // R
 
         merge(channels, encodedMat);
+    }
+
+    if (header.format == SecretFormat::TEST_MODE) {
+        header.secretSizeBits = bit_idx;
     }
 
     return encodedMat;
@@ -182,7 +186,7 @@ std::vector<byte> append_bits(const std::vector<bool>& bits) {
     return result;
 }
 
-std::vector<byte> decode_PVD(const Mat& encoded, SecretHeader header) {
+std::vector<byte> decode_PVD(const Mat& encoded, SecretHeader& header) {
     std::vector<bool> bits;
     size_t total_bits = header.secretSizeBits;
 

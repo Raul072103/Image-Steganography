@@ -391,7 +391,7 @@ void encodeMessage() {
 	// TEST MODE
 	case 4:
 	{
-		std::ifstream file("./big_file.unknown", std::ios::binary);
+		std::ifstream file("./Release.rar", std::ios::binary);
 		if (!file.is_open()) {
 			printf("Failed to open file: %s\n", "./big_file.unknown");
 			return;
