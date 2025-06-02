@@ -8,7 +8,8 @@
 enum class SecretFormat {
 	FILE,
 	IMAGE,
-	STRING
+	STRING,
+	TEST_MODE
 };
 
 enum class EncodingMethod {

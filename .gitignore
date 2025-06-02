@@ -108,3 +108,4 @@ Temporary ASP.NET Files/
 *.ncrunch*
 *.cache
 ClientBin/
+big_file.unknown

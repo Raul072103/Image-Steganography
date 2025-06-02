@@ -19,6 +19,7 @@
 const std::string SECRET_HEADER_PATH = "\\json\\header.json";
 const std::string ENCODED_IMAGES_BASE_PATH = "C:\\Users\\raula\\Desktop\\facultate\\anul 3 sem 2\\Image Processing\\Project\\Dataset\\encoded\\";
 
+bool TEST_MODE = false;
 
 std::string extractFileName(const std::string& path) {
 	int pos = path.find_last_of("/\\");
@@ -115,7 +116,7 @@ bool isImageGrayscale(Mat& img) {
 		return true;
 	}
 
-	return false;
+	return true;
 }
 
 bool isImageGrayscale(const Mat& img) {
@@ -240,6 +241,9 @@ void decodeMessage() {
 		picosha2::hash256_hex_string(secret.begin(), secret.end(), decodedStringHash);
 
 		if (secretHeader.secretHash != decodedStringHash) {
+			printf("Header hash: %s\n", secretHeader.secretHash.c_str());
+			printf("Decoded hash : %s\n", decodedStringHash.c_str());
+			printf("Secret size: %d\n", secret.size());
 			printf("The hashes don't match => ERROR!!");
 			imshow("image to decode", imageToDecode);
 			waitKey(0);
@@ -267,6 +271,7 @@ void encodeMessage() {
 	printf(" 1 - String\n");
 	printf(" 2 - Image\n");
 	printf(" 3 - File\n");
+	printf(" 4 - TEST MODE\n");
 	scanf("%d", &secretFormat);
 	getchar();
 	printf("\n");
@@ -350,6 +355,21 @@ void encodeMessage() {
 		break;
 	}
 
+	// TEST MODE
+	case 4:
+	{
+		std::ifstream file("./big_file.unknown", std::ios::binary);
+		if (!file.is_open()) {
+			printf("Failed to open file: %s\n", "./big_file.unknown");
+			return;
+		}
+
+		secret = std::vector<byte>((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+		header.format = SecretFormat::TEST_MODE;
+		header.name = "secret_TEST.txt";
+		break;
+	}
+
 	default:
 		printf("Invalid option selected.\n");
 		return;
@@ -358,6 +378,7 @@ void encodeMessage() {
 	
 	// Save the size
 	header.secretSizeBits = secret.size() * 8;
+	int fullSize = header.secretSizeBits;
 
 	// Calculate the SHA256 hash
 	std::string secretHash;
@@ -469,7 +490,23 @@ void encodeMessage() {
 		break;
 	}
 
-	// TODO(): COMPLETE THE HEADER WITH ALL THE INFROMATION
+	// recalculate the hash
+	if (header.format == SecretFormat::TEST_MODE) {
+		printf("Full size: %d\n", fullSize);
+		printf("New size: %d\n", header.secretSizeBits);
+		printf("Secret size: %d\n", secret.size());
+
+
+		printf("Old hash: %s\n", header.secretHash.c_str());
+
+		std::vector<byte> sub(secret.begin(), secret.begin() + (header.secretSizeBits / 8));
+
+		std::string secretHash;
+		picosha2::hash256_hex_string(sub.begin(), sub.end(), secretHash);
+		header.secretHash = secretHash;
+
+		printf("New hash: %s\n", header.secretHash.c_str());
+	}
 
 	// Step 5: Save the encoded image and the secret header
 	std::string outputFolder = ENCODED_IMAGES_BASE_PATH + getFileNameWithoutExtension(header.name) + "\\";

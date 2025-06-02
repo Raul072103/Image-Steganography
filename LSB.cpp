@@ -19,7 +19,7 @@ std::string getSecretTooBigMessage(size_t secretBits, size_t maxBits) {
 	return std::string(buffer);
 }
 
-Mat encode_grayscale_LSB(const Mat &src, SecretHeader header, std::vector<byte>& secret) {
+Mat encode_grayscale_LSB(const Mat &src, SecretHeader& header, std::vector<byte>& secret) {
 
 	int noBits = header.encodingHeader.lsb.bitsUsedPerChannel;
 	if (noBits > 8 || noBits < 1) {
@@ -31,7 +31,7 @@ Mat encode_grayscale_LSB(const Mat &src, SecretHeader header, std::vector<byte>&
 
 	int maximumBitsToEncode = height * width * noBits;
 
-	if (secret.size() * 8 >= maximumBitsToEncode) {
+	if (header.format != SecretFormat::TEST_MODE && secret.size() * 8 >= maximumBitsToEncode) {
 		throw std::out_of_range(getSecretTooBigMessage(secret.size() * 8, maximumBitsToEncode));
 	}
 
@@ -65,10 +65,14 @@ Mat encode_grayscale_LSB(const Mat &src, SecretHeader header, std::vector<byte>&
 		}
 	}
 
+	if (header.format == SecretFormat::TEST_MODE) {
+		header.secretSizeBits = currentBit - (currentBit % 8);
+	}
+
 	return dst;
 }
 
-Mat encode_color_LSB(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
+Mat encode_color_LSB(const Mat& src, SecretHeader& header, std::vector<byte>& secret) {
 	int noBits = header.encodingHeader.lsb.bitsUsedPerChannel;
 
 	if (noBits < 1 || noBits > 8) {
@@ -80,7 +84,7 @@ Mat encode_color_LSB(const Mat& src, SecretHeader header, std::vector<byte>& sec
 
 	int maximumBitsToEncode = height * width * noBits;
 
-	if (secret.size() * 8 >= maximumBitsToEncode) {
+	if (header.format != SecretFormat::TEST_MODE && secret.size() * 8 >= maximumBitsToEncode) {
 		throw std::out_of_range(getSecretTooBigMessage(secret.size() * 8, maximumBitsToEncode));
 	}
 
@@ -116,6 +120,10 @@ Mat encode_color_LSB(const Mat& src, SecretHeader header, std::vector<byte>& sec
 		}
 	}
 
+	if (header.format == SecretFormat::TEST_MODE) {
+		header.secretSizeBits = currentBit - (currentBit % 8);
+	}
+
 	return dst;
 }
 
@@ -130,8 +138,6 @@ std::vector<byte> decode_grayscale_LSB(const Mat& encoded, SecretHeader header) 
 	std::vector<byte> secret;
 	int height = encoded.rows;
 	int width = encoded.cols;
-
-	int secretBitsLength;
 
 	int currentBit = 0;
 
