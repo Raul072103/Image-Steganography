@@ -137,7 +137,39 @@ bool isImageGrayscale(const Mat& img) {
 	return false;
 }
 
+Mat createHistogramImage(const Mat& image, int histSize = 256, int histHeight = 400, int histWidth = 512) {
+	std::vector<Mat> bgr_planes;
+	split(image, bgr_planes);
 
+	float range[] = { 0, 256 };
+	const float* histRange = { range };
+
+	bool uniform = true, accumulate = false;
+
+	Mat histImage(histHeight, histWidth, CV_8UC3, Scalar(255, 255, 255));
+
+	std::vector<Scalar> colors = { Scalar(255, 0, 0), Scalar(0, 255, 0), Scalar(0, 0, 255) };
+	int bin_w = cvRound((double)histWidth / histSize);
+
+	for (int i = 0; i < image.channels(); ++i) {
+		Mat hist;
+		calcHist(&bgr_planes[i], 1, 0, Mat(), hist, 1, &histSize, &histRange, uniform, accumulate);
+		normalize(hist, hist, 0, histImage.rows, NORM_MINMAX);
+
+		for (int j = 1; j < histSize; ++j) {
+			line(histImage,
+				Point(bin_w * (j - 1), histHeight - cvRound(hist.at<float>(j - 1))),
+				Point(bin_w * (j), histHeight - cvRound(hist.at<float>(j))),
+				colors[i], 2);
+		}
+	}
+
+	return histImage;
+}
+
+bool saveHistogramImage(const Mat& histImage, const std::string& outputPath) {
+	return imwrite(outputPath, histImage);
+}
 
 std::vector<byte> generateImageSecret(Mat img) {
 	std::vector<byte> secret;
@@ -352,6 +384,7 @@ void encodeMessage() {
 		secret = std::vector<byte>((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 		header.format = SecretFormat::FILE;
 		header.name = extractFileName(filePath);
+		file.close();
 		break;
 	}
 
@@ -367,6 +400,7 @@ void encodeMessage() {
 		secret = std::vector<byte>((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 		header.format = SecretFormat::TEST_MODE;
 		header.name = "secret_TEST.txt";
+		file.close();
 		break;
 	}
 
@@ -533,6 +567,15 @@ void encodeMessage() {
 	if (header.format == SecretFormat::TEST_MODE && !imwrite(outputFolder + "original.bmp", imageToEmbed)) {
 		printf("Failed to write orginal image.\n");
 		return;
+	}
+
+	// Save histograms 
+	if (header.format == SecretFormat::TEST_MODE) {
+		Mat originalImgHisto = createHistogramImage(imageToEmbed);
+		Mat secretImgHisto = createHistogramImage(encodedImage);
+
+		saveHistogramImage(originalImgHisto, outputFolder + "original_histo.bmp");
+		saveHistogramImage(originalImgHisto, outputFolder + "secret_histo.bmp");
 	}
 
 	// Save the secret header as JSON
