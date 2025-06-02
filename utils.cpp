@@ -529,6 +529,12 @@ void encodeMessage() {
 		return;
 	}
 
+	// Save the original image if TEST MODE
+	if (header.format == SecretFormat::TEST_MODE && !imwrite(outputFolder + "original.bmp", imageToEmbed)) {
+		printf("Failed to write orginal image.\n");
+		return;
+	}
+
 	// Save the secret header as JSON
 	std::string headerFilePath = jsonFolder + "header.json";
 	std::ofstream headerFile(headerFilePath);
