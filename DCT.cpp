@@ -64,7 +64,7 @@ Mat inverseZigzag(const std::vector<int>& vec) {
 	return block;
 }
 
-Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
+Mat encode_DCT(const Mat& src, SecretHeader& header, std::vector<byte>& secret) {
 	// cropping step
 	Mat croppedImg = cropTo8x8(src);
 
@@ -133,6 +133,16 @@ Mat encode_DCT(const Mat& src, SecretHeader header, std::vector<byte>& secret) {
 		}
 
 		embeddedVec.push_back(currVec);
+	}
+
+	if (header.format == SecretFormat::TEST_MODE) {
+		header.secretSizeBits = bitPos;
+	}
+	else {
+		if (bitPos < header.secretSizeBits) {
+			header.secretSizeBits = bitPos;
+			printf("ERROR - NOT ENOUGH ENCODING CAPACITY\n");
+		}
 	}
 
 	// inverse zigzag
